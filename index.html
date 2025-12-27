@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radar Distribuidora - Catálogo Oficial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); }
+        .modal-content { background: white; margin: 2% auto; padding: 25px; width: 95%; max-width: 800px; border-radius: 32px; max-height: 90vh; overflow-y: auto; }
+        .img-produto { width: 100%; height: 140px; object-fit: contain; background: #f1f5f9; border-radius: 20px; margin-bottom: 8px; }
+        input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+    </style>
+</head>
+<body class="pb-64">
+
+    <header class="bg-blue-600 text-white p-6 sticky top-0 z-50 shadow-xl flex justify-between items-center rounded-b-[40px]">
+        <div>
+            <h1 class="text-2xl font-black tracking-tighter uppercase italic">RADAR <span class="font-light text-blue-200">DISTRIBUIDORA</span></h1>
+            <p class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Pedidos: 47 99769-1722</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 max-w-6xl">
+        <div class="relative my-6">
+            <input type="text" id="busca" oninput="filtrar()" placeholder="Pesquisar produto..." 
+                class="w-full p-5 pl-12 bg-white border-none rounded-3xl shadow-lg focus:ring-2 focus:ring-blue-400 outline-none transition-all">
+            <span class="absolute left-5 top-5 opacity-30">🔍</span>
+        </div>
+
+        <div id="vitrine" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+    </main>
+
+    <div id="modalAdmin" class="modal">
+        <div class="modal-content shadow-2xl">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <h2 class="text-xl font-black text-slate-800 uppercase italic">Painel Administrativo</h2>
+                <button onclick="fecharAdmin()" class="bg-slate-100 p-2 rounded-full">✕</button>
+            </div>
+            
+            <div class="bg-blue-50 p-4 rounded-2xl mb-6 border border-blue-100">
+                <p class="text-[10px] font-black uppercase text-blue-500 mb-2">Novo Produto</p>
+                <div class="grid grid-cols-1 gap-2">
+                    <input type="text" id="novo-desc" placeholder="Nome do Produto" class="p-3 rounded-xl border-none text-sm">
+                    <input type="text" id="novo-img" placeholder="Link da Imagem (URL)" class="p-3 rounded-xl border-none text-sm">
+                    <div class="flex gap-2">
+                        <input type="number" id="novo-preco" step="0.01" placeholder="Preço (Ex: 10.50)" class="w-full p-3 rounded-xl border-none text-sm">
+                        <button onclick="adicionarProduto()" class="bg-blue-600 text-white px-6 rounded-xl font-bold uppercase text-xs">Adicionar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="lista-edicao" class="space-y-2 mb-6 max-h-80 overflow-y-auto border-t pt-4"></div>
+            <button onclick="exportarDados()" class="w-full bg-blue-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest shadow-lg">Salvar e Atualizar Site</button>
+        </div>
+    </div>
+
+    <div class="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t p-6 shadow-2xl z-40 rounded-t-[40px]">
+        <div class="container mx-auto max-w-5xl">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <input type="text" id="cliente_nome" placeholder="Seu Nome" class="p-4 rounded-2xl bg-slate-100 border-none font-bold text-sm outline-none focus:ring-2 focus:ring-blue-400">
+                <input type="text" id="cliente_end" placeholder="Endereço" class="p-4 rounded-2xl bg-slate-100 border-none font-bold text-sm outline-none focus:ring-2 focus:ring-blue-400">
+            </div>
+            <div class="flex justify-between items-center">
+                <div>
+                    <span class="text-slate-400 text-[10px] font-black uppercase tracking-widest">Total do Pedido</span>
+                    <p id="total-geral" class="text-4xl font-black text-blue-600 italic tracking-tighter">R$ 0,00</p>
+                </div>
+                <div class="flex flex-col items-end gap-2">
+                    <button onclick="enviarWhatsApp()" class="bg-green-500 text-white px-8 py-4 rounded-2xl font-black uppercase text-xs shadow-lg hover:scale-105 transition-transform">Finalizar Pedido</button>
+                    <button onclick="fazerLogin()" class="text-[9px] text-slate-300 font-black uppercase">🔒 Administração</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const FONE = "5547997691722";
+        const SENHA_MESTRA = "1234";
+
+        let produtos = [
+            { id: "1", desc: "ABS COTTON LINE C/16 SUAVE C/ABAS", preco: 0.00, img: "" },
+            { id: "2", desc: "ABS COTTON LINE C/8 SECA C/ ABAS", preco: 0.00, img: "" },
+            { id: "3", desc: "ABS COTTON LINE C/8 SECA S/ ABAS", preco: 0.00, img: "" },
+            { id: "4", desc: "ABS COTTON LINE C/8 SUAVE C/ ABAS", preco: 0.00, img: "" },
+            { id: "5", desc: "ABS COTTON LINE C/8 SUAVE S/ ABAS", preco: 0.00, img: "" },
+            { id: "6", desc: "ABS COTTONBABY LADY C/16UN SUAVE C/ ABAS", preco: 0.00, img: "" },
+            { id: "7", desc: "ABS COTTONBABY LADY C/32UN SUAVE COM ABAS", preco: 0.00, img: "" },
+            { id: "8", desc: "ABS COTTONBABY LADY C/32UN SUAVE COM ABAS NOTURNO", preco: 0.00, img: "" },
+            { id: "9", desc: "ABS COTTONBABY LADY C/8UN SUAVE C/ ABAS", preco: 0.00, img: "" },
+            { id: "10", desc: "ABS COTTONBABY LADY C/8UN SUAVE C/ ABAS NOTURNO", preco: 0.00, img: "" },
+            { id: "11", desc: "ABS COTTONBABY LADY C/8UN SUAVE S/ ABAS", preco: 0.00, img: "" },
+            { id: "12", desc: "ABS INTERNO INTIMUS MEDIO C/8", preco: 0.00, img: "" },
+            { id: "13", desc: "ABS INTERNO INTIMUS MINI C/8", preco: 0.00, img: "" },
+            { id: "14", desc: "ABS INTERNO INTIMUS SUPER C/8", preco: 0.00, img: "" },
+            { id: "15", desc: "ABS INTIMUS C/32 SUAVE C/ ABAS", preco: 0.00, img: "" },
+            { id: "16", desc: "ABS INTIMUS NOTURNO EXTRA SUAVE C/ ABAS C/8", preco: 0.00, img: "" },
+            { id: "17", desc: "ABS INTIMUS SECA C/ ABAS C/8", preco: 0.00, img: "" },
+            { id: "18", desc: "ABS INTIMUS SECA S/ ABAS C/8", preco: 0.00, img: "" },
+            { id: "19", desc: "ABS INTIMUS SUAVE C/ ABAS C/8", preco: 0.00, img: "" },
+            { id: "20", desc: "ABS INTIMUS SUAVE S/ ABAS C/8", preco: 0.00, img: "" },
+            { id: "21", desc: "ABS INTIMUS ULTRAFINO ANTIB. C/ABAS.8X1", preco: 0.00, img: "" },
+            { id: "22", desc: "ABS SEMPRE LIVRE C/ ABAS C/8", preco: 0.00, img: "" },
+            { id: "23", desc: "ABS SEMPRE LIVRE S/ ABAS C/8", preco: 0.00, img: "" },
+            { id: "24", desc: "ABS SYM SECA COM ABAS (LARANJA) C/8", preco: 0.00, img: "" },
+            { id: "25", desc: "ABS SYM SUAVE C/ ABAS NOITE/DIA (AZUL) C/8", preco: 0.00, img: "" },
+            { id: "26", desc: "ABS SYM SUAVE COM ABAS (ROSA) C/8", preco: 0.00, img: "" },
+            { id: "27", desc: "ABS SYM SUAVE SEM ABAS (VERDE) C/8", preco: 0.00, img: "" },
+            { id: "28", desc: "ACENDEDOR 80 LAR/ CHURRASQ. ITAJUBA 500ML", preco: 0.00, img: "" },
+            { id: "29", desc: "ACENDEDOR DE FOGO SANDERO C/6", preco: 0.00, img: "" },
+            { id: "30", desc: "AGUA OXIG 20VL ENCASA CREM 80ML", preco: 0.00, img: "" },
+            { id: "31", desc: "AGUA OXIG 30VL ENCASA CREM 80ML", preco: 0.00, img: "" },
+            { id: "32", desc: "AGUA OXIG 40VL ENCASA CREM 80ML", preco: 0.00, img: "" },
+            { id: "33", desc: "AGUA OXIG FARMAX 10VL 90ML", preco: 0.00, img: "" },
+            { id: "34", desc: "AGUA OXIG FARMAX 20VL 90ML", preco: 0.00, img: "" },
+            { id: "35", desc: "AGUA OXIG FARMAX 30VL 90ML", preco: 0.00, img: "" },
+            { id: "36", desc: "AGUA OXIG FARMAX 40VL 90ML", preco: 0.00, img: "" },
+            { id: "37", desc: "AGUA OXIG YAMÁ CREM 100ML 30VL", preco: 0.00, img: "" },
+            { id: "38", desc: "AGUA OXIG YAMÁ CREM 100ML 40VL", preco: 0.00, img: "" },
+            { id: "39", desc: "ALCOOL 46 SANEANTE LIMPADOR ITAJUBA 1L", preco: 0.00, img: "" },
+            { id: "40", desc: "ALCOOL 67 EM GEL LIMPADOR MULTIUSO ITAJUBA 500ML", preco: 0.00, img: "" },
+            { id: "41", desc: "ALCOOL 70 SUPER VALE INPM LIQ HOSP 1L", preco: 0.00, img: "" },
+            { id: "42", desc: "ALCOOL ETILICO SUPER VALE 92,8 INPM 1LT", preco: 0.00, img: "" },
+            { id: "43", desc: "ALGODAO BOLA BRANCO COTTON LINE 30G", preco: 0.00, img: "" },
+            { id: "44", desc: "ALGODAO BOLA BRANCO COTTON LINE 50G", preco: 0.00, img: "" },
+            { id: "45", desc: "ALGODAO BOLA COLORIDO COTTON LINE 30G", preco: 0.00, img: "" },
+            { id: "46", desc: "ALGODAO BOLA COTTONBABY BRANCO 50G", preco: 0.00, img: "" },
+            { id: "47", desc: "ALGODAO BOLA COTTONBABY COLORIDO 50G", preco: 0.00, img: "" },
+            { id: "48", desc: "ALGODAO BOLA DENGO 50G", preco: 0.00, img: "" },
+            { id: "49", desc: "CABOS DE VASSOURAS PLASTIFICADO", preco: 0.00, img: "" },
+            { id: "50", desc: "CASADINHO XIXI AQUI 30ML/ XIXI NAO 500ML PET COALA", preco: 0.00, img: "" },
+            { id: "51", desc: "CHICLE BLONG BLACK 40UN/200G", preco: 0.00, img: "" },
+            { id: "52", desc: "CHICLE BLONG BLUE 40UN/200G", preco: 0.00, img: "" },
+            { id: "53", desc: "CHICLE BLONG ENERGY 40UN/200G", preco: 0.00, img: "" },
+            { id: "54", desc: "CHICLE BLONG HORTELA 40UN/200G", preco: 0.00, img: "" },
+            { id: "55", desc: "CHICLE BLONG MELANCIA 40UN/200G", preco: 0.00, img: "" },
+            { id: "56", desc: "CHICLE BLONG MENTA AZUL 40UN/200G", preco: 0.00, img: "" },
+            { id: "57", desc: "CHICLE BLONG MORANGO 40UN/200G", preco: 0.00, img: "" },
+            { id: "58", desc: "CHICLE BLONG NAPOLITANO 40UN/200G", preco: 0.00, img: "" },
+            { id: "59", desc: "CHICLE BLONG NITROFERAS ACIDO 200G", preco: 0.00, img: "" },
+            { id: "60", desc: "CHICLE BLONG NITROFERAS ICE 200G", preco: 0.00, img: "" },
+            { id: "61", desc: "CHICLE BLONG NITROFERAS PARALISANTE 200G", preco: 0.00, img: "" },
+            { id: "62", desc: "CHICLE BLONG TUTTI-FRUTTI 40UN/200G", preco: 0.00, img: "" },
+            { id: "63", desc: "CHICLE BLONG UVA 40UN/200G", preco: 0.00, img: "" },
+            { id: "64", desc: "CHICLE BLONG YOGURT MORANGO 40UN/200G", preco: 0.00, img: "" },
+            { id: "65", desc: "CHICLE BUZZY BARBIE TATTOO HORTELA 90UN", preco: 0.00, img: "" },
+            { id: "66", desc: "CHICLE BUZZY BARBIE TATTOO TUTTI FRUTTI 90UN", preco: 0.00, img: "" },
+            { id: "67", desc: "CHICLE BUZZY HOT WHEELS TATTOO MENTA POLAR 90UN", preco: 0.00, img: "" },
+            { id: "68", desc: "CHICLE BUZZY HOT WHEELS TATTOO TUTTI FRUTTI 90UN", preco: 0.00, img: "" },
+            { id: "69", desc: "CHICLE BUZZY TATTOO TRIBAL HORTELA CX C/90UN", preco: 0.00, img: "" },
+            { id: "70", desc: "CHICLE BUZZY TATTOO TRIBAL TUTTI FRUTTI CX C/90UN", preco: 0.00, img: "" },
+            { id: "71", desc: "CHICLE BUZZY TATTOO TRIBAL MORANGO CX C/90UN", preco: 0.00, img: "" },
+            { id: "72", desc: "CHICLE BUZZY TATTOO TRIBAL UVA CX C/90UN", preco: 0.00, img: "" },
+            { id: "73", desc: "CHICLE FREEGELLS GUM CANELA 15X1", preco: 0.00, img: "" },
+            { id: "74", desc: "CHICLE FREEGELLS GUM EXTRA FORTE 15X1", preco: 0.00, img: "" },
+            { id: "75", desc: "CHICLE FREEGELLS GUM HORTELA 15X1", preco: 0.00, img: "" },
+            { id: "76", desc: "CHICLE FREEGELLS GUM MELANCIA 15X1", preco: 0.00, img: "" },
+            { id: "77", desc: "CHICLE FREEGELLS GUM MENTA 15X1", preco: 0.00, img: "" },
+            { id: "78", desc: "CHICLE FREEGELLS GUM MORANGO 15X1", preco: 0.00, img: "" },
+            { id: "79", desc: "CHICLE FREEGELLS GUM ORIGINAL CHERRY 15X1", preco: 0.00, img: "" },
+            { id: "80", desc: "CHICLE FREEGELLS GUM TUTTI FRUTTI 15X1", preco: 0.00, img: "" },
+            { id: "81", desc: "CHICLE TRIDENT CANELA 8G 21X1", preco: 0.00, img: "" },
+            { id: "82", desc: "CHICLE TRIDENT HERBAL 8G 21X1", preco: 0.00, img: "" },
+            { id: "83", desc: "CHICLE TRIDENT HORTELA 8G 21X1", preco: 0.00, img: "" },
+            { id: "84", desc: "CHICLE TRIDENT INTENSE 8G 21X1", preco: 0.00, img: "" },
+            { id: "85", desc: "CHICLE TRIDENT MELANCIA 8G 21X1", preco: 0.00, img: "" },
+            { id: "86", desc: "CHICLE TRIDENT MENTA 8G 21X1", preco: 0.00, img: "" },
+            { id: "87", desc: "CHICLE TRIDENT MORANGO 8G 21X1", preco: 0.00, img: "" },
+            { id: "88", desc: "CHICLE TRIDENT TUTTI FRUTTI 8G 21X1", preco: 0.00, img: "" },
+            { id: "89", desc: "CHOC BEL BY COCO 25G DISPLAY C/24", preco: 0.00, img: "" },
+            { id: "90", desc: "CHOC BOMBOM MORANGUETE 25G C/24", preco: 0.00, img: "" },
+            { id: "91", desc: "CHOC BOMBOM MORANGUETE BEL 13G DISPLAY C/36UN", preco: 0.00, img: "" },
+            { id: "92", desc: "CHOC NEST. KIT KAT BRANC TAB 24X1", preco: 0.00, img: "" },
+            { id: "93", desc: "CHOC NEST. KIT KAT AO LEITE 24X1", preco: 0.00, img: "" },
+            { id: "94", desc: "CHOC NEST. KIT KAT DARK 24X1", preco: 0.00, img: "" },
+            { id: "95", desc: "CHOC SNICKERS AO LEITE 20X1", preco: 0.00, img: "" },
+            { id: "96", desc: "CHOC SNICKERS BRANCO 20X1", preco: 0.00, img: "" },
+            { id: "97", desc: "COLA INST. 20G ALMASUPER PRECISAO C10", preco: 0.00, img: "" },
+            { id: "98", desc: "COLA RATOEIRA PEGA RATO DISPLAY C/20", preco: 0.00, img: "" },
+            { id: "99", desc: "COLA SUPER BONDER 3G 12X1", preco: 0.00, img: "" },
+            { id: "100", desc: "COLA TREE BOND 2G", preco: 0.00, img: "" },
+            { id: "101", desc: "COLA TREE BOND 2G 42X1", preco: 0.00, img: "" },
+            { id: "102", desc: "COLONIA FILHOTES PET COALA 120ML CX6", preco: 0.00, img: "" },
+            { id: "103", desc: "COLONIA MELANCIA PET COALA 120ML CX6", preco: 0.00, img: "" },
+            { id: "104", desc: "COLONIA TABU FLORES 60ML", preco: 0.00, img: "" },
+            { id: "105", desc: "COLONIA TABU ROSA ROMANCE 60ML", preco: 0.00, img: "" },
+            { id: "106", desc: "COLONIA TABU ROXA SEGREDOS 60ML", preco: 0.00, img: "" },
+            { id: "107", desc: "COLONIA TABU TRADICIONAL 60ML", preco: 0.00, img: "" },
+            { id: "108", desc: "COLONIA TUTTI FRUTTI PET COALA 120ML CX6", preco: 0.00, img: "" },
+            { id: "109", desc: "COND COTTONBABY SNOOPY BABY GOTAS DE CAMOMILA 200ML", preco: 0.00, img: "" },
+            { id: "110", desc: "COND COTTONBABY SNOOPY BABY TOQUE DE ALGODAO 200ML", preco: 0.00, img: "" },
+            { id: "111", desc: "COND NEUTROX CLASSICO 100ML", preco: 0.00, img: "" },
+            { id: "112", desc: "COND PALMOLIVE BOOM DE HIDRATACAO 350ML", preco: 0.00, img: "" },
+            { id: "113", desc: "COND PALMOLIVE CACHOS LIVRES BABOSA 350ML", preco: 0.00, img: "" },
+            { id: "114", desc: "COND PALMOLIVE CERAMIDAS FORCE 350ML", preco: 0.00, img: "" },
+            { id: "115", desc: "COND PALMOLIVE DETOX ENERGIZANTE 350ML", preco: 0.00, img: "" },
+            { id: "116", desc: "COND PALMOLIVE FRIZZ RESIST 350ML", preco: 0.00, img: "" },
+            { id: "117", desc: "COND PALMOLIVE NUTRICAO EXTRAORDINARIA 350ML", preco: 0.00, img: "" },
+            { id: "118", desc: "COND PALMOLIVE PRETOS VIBRANTES 350ML", preco: 0.00, img: "" },
+            { id: "119", desc: "COND PALMOLIVE SEMPRE LONGO 350ML", preco: 0.00, img: "" },
+            { id: "120", desc: "COND PALMOLIVE THERMO RESIST 350ML", preco: 0.00, img: "" },
+            { id: "121", desc: "COND POM POM SUAVE 200ML", preco: 0.00, img: "" },
+            { id: "122", desc: "COND SEDA LISO PERFEITO 325ML", preco: 0.00, img: "" },
+            { id: "123", desc: "COND SKALA MELANCIA 325ML", preco: 0.00, img: "" },
+            { id: "124", desc: "COND SKALA MORANGO 325ML", preco: 0.00, img: "" },
+            { id: "125", desc: "COND SKALA 12 EM 1 325ML", preco: 0.00, img: "" },
+            { id: "126", desc: "COND SKALA ABACATE 325ML", preco: 0.00, img: "" },
+            { id: "127", desc: "COND SKALA AMIDO DE MILHO 325ML", preco: 0.00, img: "" },
+            { id: "128", desc: "COND SKALA ARGAN 325ML", preco: 0.00, img: "" },
+            { id: "129", desc: "COND SKALA BABOSA 325ML", preco: 0.00, img: "" },
+            { id: "130", desc: "COND SKALA BOMBA VITAMINAS 325ML", preco: 0.00, img: "" },
+            { id: "131", desc: "COND SKALA CERAMIDAS G3 325ML", preco: 0.00, img: "" },
+            { id: "132", desc: "COND SKALA CRESPINHO DIVINO KIDS 325ML", preco: 0.00, img: "" },
+            { id: "133", desc: "COND SKALA CRESPO DIVINO 325ML", preco: 0.00, img: "" },
+            { id: "134", desc: "COND SKALA GENETIQS FORCA E BRILHO 325ML", preco: 0.00, img: "" },
+            { id: "135", desc: "COND SKALA JABORANDI 325ML", preco: 0.00, img: "" },
+            { id: "136", desc: "COND SKALA MAIS CACHOS 325ML", preco: 0.00, img: "" },
+            { id: "137", desc: "COND SKALA MAIS LISOS 325ML", preco: 0.00, img: "" },
+            { id: "138", desc: "COND SKALA MANTEIGA KARITE 325ML", preco: 0.00, img: "" },
+            { id: "139", desc: "COND SKALA OLEO DE COCO 325ML", preco: 0.00, img: "" },
+            { id: "140", desc: "COND SKALA UVA 325ML", preco: 0.00, img: "" },
+            { id: "141", desc: "COND SKALA VINAGRE DE MACA 325ML", preco: 0.00, img: "" },
+            { id: "142", desc: "CONDICIONADOR PET COALA 500 ML CX6", preco: 0.00, img: "" },
+            { id: "143", desc: "COPO COPOSUL 180ML BRANCO LINHA OURO C/100UN", preco: 0.00, img: "" },
+            { id: "144", desc: "COPO COPOSUL 180ML TRANSP LINHA OURO C/100UN", preco: 0.00, img: "" },
+            { id: "145", desc: "COPO COPOSUL 200ML AZUL LINHA OURO C/50UN", preco: 0.00, img: "" },
+            { id: "146", desc: "COPO COPOSUL 200ML ROSA LINHA OURO C/50UN", preco: 0.00, img: "" },
+            { id: "147", desc: "COPO COPOSUL 300ML BRANCO C/100UN", preco: 0.00, img: "" },
+            { id: "148", desc: "COPO COPOSUL 300ML TRANSPARENTE C/100UN", preco: 0.00, img: "" },
+            { id: "149", desc: "COPO COPOSUL 500ML TRANSPARENTE C/50UN", preco: 0.00, img: "" },
+            { id: "150", desc: "COPO COPOSUL 50ML BRANCO C/100", preco: 0.00, img: "" },
+            { id: "151", desc: "COPO COPOSUL 50ML TRANSLUCIDO C/100", preco: 0.00, img: "" },
+            { id: "152", desc: "COPO CRISTALCOPO 150ML BRANCO", preco: 0.00, img: "" },
+            { id: "153", desc: "COPO CRISTALCOPO 150ML TRANSP", preco: 0.00, img: "" },
+            { id: "154", desc: "COPO CRISTALCOPO 200ML BRANCO", preco: 0.00, img: "" },
+            { id: "155", desc: "COPO CRISTALCOPO 200ML TRANSP", preco: 0.00, img: "" },
+            { id: "156", desc: "COPO CRISTALCOPO 50ML BRANCO", preco: 0.00, img: "" },
+            { id: "157", desc: "CORDA VARAL PET GABOARD 03MMX10M C/10", preco: 0.00, img: "" },
+            { id: "158", desc: "CORDA VARAL TR. MULTICORES GABOARD PP 03MM X 10M", preco: 0.00, img: "" },
+            { id: "159", desc: "CR HIDR+CPP GKIDS 2 EM 1 COND XO EMBARAÇO 1KG", preco: 0.00, img: "" },
+            { id: "160", desc: "CREME BARBA BOZZANO HIDRATACAO 65G", preco: 0.00, img: "" },
+            { id: "161", desc: "CREME BARBA BOZZANO PELE SENSIVEL 65G", preco: 0.00, img: "" },
+            { id: "162", desc: "CREME BARBA BOZZANO REFRESCANTE 65G", preco: 0.00, img: "" },
+            { id: "163", desc: "CREME DENT CLOSE UP TRIPLE HORTELA 70G 12X1", preco: 0.00, img: "" },
+            { id: "164", desc: "CREME DENT CLOSE UP TRIPLE MENTA 70G 12X1", preco: 0.00, img: "" },
+            { id: "165", desc: "CREME DENT CLOSE UP TRIPLE MENTA AMERICANA 70G 12X1", preco: 0.00, img: "" },
+            { id: "166", desc: "CREME DENT COLGATE TOTAL 12 GENGIVA REFORÇADA 150G 2X1", preco: 0.00, img: "" },
+            { id: "167", desc: "CREME DENT SENSODYNE 90G BRANQUEADOR 3X1", preco: 0.00, img: "" },
+            { id: "168", desc: "CREME DENT SORRISO CARVAO 60G 6X1", preco: 0.00, img: "" },
+            { id: "169", desc: "CREME DENT SORRISO DENTES BRANCOS 90G 12X1", preco: 0.00, img: "" },
+            { id: "170", desc: "CREME DENT SORRISO ESCUDO LIMPEZA COMPLETA 70G 12X1", preco: 0.00, img: "" },
+            { id: "171", desc: "CREME DENT SORRISO TRIPLA LIMPEZA COMPLETA 140G 3X1", preco: 0.00, img: "" },
+            { id: "172", desc: "CREME DENTAL ICE CLEAN 70G", preco: 0.00, img: "" },
+            { id: "173", desc: "CREME DENTAL ICE CLEAN 90G 12X1", preco: 0.00, img: "" },
+            { id: "174", desc: "CREME DENTAL ORAL B 70G 12X1", preco: 0.00, img: "" },
+            { id: "175", desc: "CREME MULT. YAMASTEROL 200G ARGAN", preco: 0.00, img: "" },
+            { id: "176", desc: "CREME MULT. YAMASTEROL 200G BABOSA", preco: 0.00, img: "" },
+            { id: "177", desc: "CREME MULT. YAMASTEROL 200G BRANCO", preco: 0.00, img: "" },
+            { id: "178", desc: "CREME MULT. YAMASTEROL 200G HIALURONICO", preco: 0.00, img: "" },
+            { id: "179", desc: "CREME MULT. YAMASTEROL 200G QUERATINA", preco: 0.00, img: "" },
+            { id: "180", desc: "CREME MULT. YAMASTEROL 320G ARGAN", preco: 0.00, img: "" },
+            { id: "181", desc: "CREME MULT. YAMASTEROL 320G BABOSA", preco: 0.00, img: "" },
+            { id: "182", desc: "CREME MULT. YAMASTEROL 320G BRANCO", preco: 0.00, img: "" },
+            { id: "183", desc: "CREME MULT. YAMASTEROL 320G HIALURONICO", preco: 0.00, img: "" },
+            { id: "184", desc: "CREME MULT. YAMASTEROL 320G NIACINAMIDA", preco: 0.00, img: "" },
+            { id: "185", desc: "CREME MULT. YAMASTEROL 320G QUERATINA", preco: 0.00, img: "" },
+            { id: "186", desc: "CREME P/ PENT ORIGEM (ROLA/ ENROLA) OLEO DE ARGAN 250ML", preco: 0.00, img: "" },
+            { id: "187", desc: "CREME P/ PENT ORIGEM AZEITE DE OLIVA/ ROLA ENROLA 250ML", preco: 0.00, img: "" },
+            { id: "188", desc: "CREME P/PENT ORIGEM BABOSA 250ML", preco: 0.00, img: "" },
+            { id: "189", desc: "CREME P/ PENT ORIGEM OLEO DE COCO 250ML", preco: 0.00, img: "" },
+            { id: "190", desc: "CREME PENTEAR SKALA ABACATE 250G", preco: 0.00, img: "" },
+            { id: "191", desc: "CREME PENTEAR SKALA AMIDO DE MILHO 250G", preco: 0.00, img: "" },
+            { id: "192", desc: "CREME PENTEAR SKALA BOMBA DE VITAMINAS 250G", preco: 0.00, img: "" },
+            { id: "193", desc: "ED71 ESCOVA DENTAL TRIDENT PROT. CERDAS/ LIMP. LINGUA MACIA", preco: 0.00, img: "" },
+            { id: "194", desc: "ED74 ESCOVA DENTAL TRIDENT PROT. CERDAS/ LIMP. LINGUA MACIA", preco: 0.00, img: "" },
+            { id: "195", desc: "ED75 ESCOVA DENTAL TRIDENT PROT. CERDAS/ LIMP. LINGUA MACIA BLACK", preco: 0.00, img: "" },
+            { id: "196", desc: "ED83 ESCOVA DENTAL TRIDENT C/ PROT. DE CERDAS MEDIA UN CABO TRANSP.", preco: 0.00, img: "" },
+            { id: "197", desc: "ED85 ESCOVA DENTAL TRIDENT PROT. CERDAS/ LIMP. LINGUA MACIA BRANCA", preco: 0.00, img: "" },
+            { id: "198", desc: "ED86 ESCOVA DENTAL TRIDENT C/ PROT. DE CERDAS MEDIA UN", preco: 0.00, img: "" },
+            { id: "199", desc: "ED89 ESCOVA DENTAL TRIDENT PROT. CERDAS E LIMP. LINGUA MEDIA", preco: 0.00, img: "" },
+            { id: "200", desc: "ED90 ESCOVA DENTAL TRIDENT C/ PROT. CERDAS/ARRED. MACIA UN", preco: 0.00, img: "" },
+            { id: "201", desc: "EMBALAPRATICO GABOARDI 2KG", preco: 0.00, img: "" },
+            { id: "202", desc: "EMBALAPRATICO GABOARDI 3KG", preco: 0.00, img: "" },
+            { id: "203", desc: "EMBALAPRATICO GABOARDI 5KG", preco: 0.00, img: "" },
+            { id: "204", desc: "ENXAG.COLGATE PLAX ODOR CONTROL 250ML SEM ALCOOL", preco: 0.00, img: "" },
+            { id: "205", desc: "ESC. MEDFIO MACIA CABO EMB. PRECISION BLACK MAIS FIO DENTAL BLACK 50M", preco: 0.00, img: "" },
+            { id: "206", desc: "ESCOVA DE ROUPA OVAL CONDOR MADEIRA UN", preco: 0.00, img: "" },
+            { id: "207", desc: "ESCOVA DE ROUPA OVAL TOQ UN", preco: 0.00, img: "" },
+            { id: "208", desc: "ESCOVA DENTAL MEDFIO ADULTO MACIA TRAVEL VIAGEM", preco: 0.00, img: "" },
+            { id: "209", desc: "ESCOVA DENTAL POWERDENT MAIS SOFT MACIA", preco: 0.00, img: "" },
+            { id: "210", desc: "ESCOVA DENTAL SORRISO KOLY ORIGINAL DURA", preco: 0.00, img: "" },
+            { id: "211", desc: "ESCOVA MEDFIO ADULTO MAC. LIFE PRO MAIS FIO DENTAL SABORES 25M SLIDE PRO", preco: 0.00, img: "" },
+            { id: "212", desc: "ESCOVA MEDFIO ADULTO MACIA C. EMB. PRECISION BLACK", preco: 0.00, img: "" },
+            { id: "213", desc: "ESCOVA MEDFIO ADULTO MACIA CABO EMB. PRECISION CLEAN MAIS FIO DENTAL 25M", preco: 0.00, img: "" },
+            { id: "214", desc: "ESCOVA MEDFIO ADULTO MACIA CABO EMBOR. PRECISION CLEAN", preco: 0.00, img: "" },
+            { id: "215", desc: "ESCOVA MEDFIO ADULTO MACIA LIFE PRO", preco: 0.00, img: "" },
+            { id: "216", desc: "ESCOVA MEDFIO ADULTO MACIA PACK PROMOCIONAL 3X1 LIFE PRO", preco: 0.00, img: "" },
+            { id: "217", desc: "ESCOVA MEDFIO ADULTO MACIA SLIDE PRO", preco: 0.00, img: "" },
+            { id: "218", desc: "ESCOVA MEDFIO INFANTIL MACIA FLOPPY", preco: 0.00, img: "" },
+            { id: "219", desc: "ESCOVA MEDFIO INFANTIL MACIA LIFE PRO", preco: 0.00, img: "" },
+            { id: "220", desc: "ESCOVA MEDFIO INFANTIL MACIA PACK PROMOCIONAL 2X1LIFE PRO", preco: 0.00, img: "" },
+            { id: "221", desc: "ESMALTE IMPALA FOCONO BEM ESTAR 7,5ML", preco: 0.00, img: "" },
+            { id: "222", desc: "ESMALTE IMPALA TRANSPARENTES/PRESSA 7,5ML", preco: 0.00, img: "" },
+            { id: "223", desc: "ESP BARBA BOZZANO HIDRATACAO 193G", preco: 0.00, img: "" },
+            { id: "224", desc: "ESP BARBA BOZZANO PELE SENSIVEL 193G", preco: 0.00, img: "" },
+            { id: "225", desc: "ESP BARBA BOZZANO REFRESCANTE 193G", preco: 0.00, img: "" },
+            { id: "226", desc: "ESPETO DE BAMBU GABOARD 250MM", preco: 0.00, img: "" },
+            { id: "227", desc: "ESPETO DE BAMBU GABOARD 300MM", preco: 0.00, img: "" },
+            { id: "228", desc: "ESPIRAIS PIRISA C/10", preco: 0.00, img: "" },
+            { id: "229", desc: "ESPIRAL ORIGINAL BOA NOITE MAT INSET C/8", preco: 0.00, img: "" },
+            { id: "230", desc: "ESPONJA ALKLIN MULTIUSO DUPLA FARDO 60X1", preco: 0.00, img: "" },
+            { id: "231", desc: "ESPONJA MULTIUSO ALKLIN 10UN", preco: 0.00, img: "" },
+            { id: "232", desc: "ESPONJA MULTIUSO ALKLIN C/4 UN", preco: 0.00, img: "" },
+            { id: "233", desc: "ESPUMA DE BARBA ABOVE SUAVIZANTE 150ML", preco: 0.00, img: "" },
+            { id: "234", desc: "ESPUMA DE BARBA ABOVE SUAVIZANTE 200ML", preco: 0.00, img: "" },
+            { id: "235", desc: "FILME PVC GABOARD UTILFILME 28CM X 15MT", preco: 0.00, img: "" },
+            { id: "236", desc: "FINI 14G CHICLE CLASSICOS 18X1", preco: 0.00, img: "" },
+            { id: "237", desc: "FINI 14G CHICLE MORANGO 18X1", preco: 0.00, img: "" },
+            { id: "238", desc: "FINI 14G CHICLE SALADA FRUTAS 18X1", preco: 0.00, img: "" },
+            { id: "239", desc: "FINI 14G PASTILHA MEΝΤΑ 40Χ1", preco: 0.00, img: "" },
+            { id: "240", desc: "FINI 14G PASTILHA FINI HORTELA 40X1", preco: 0.00, img: "" },
+            { id: "241", desc: "GEL ADESIVO HIGIE PLUS LAVANDA 4 DOSES", preco: 0.00, img: "" },
+            { id: "242", desc: "GEL ADESIVO HIGIE PLUS MARINE 4 DOSES", preco: 0.00, img: "" },
+            { id: "243", desc: "GEL BOZZANO AZUL 300G", preco: 0.00, img: "" },
+            { id: "244", desc: "GEL BOZZANO INCOLOR 300G", preco: 0.00, img: "" },
+            { id: "245", desc: "GEL DENTAL CLOSEUP LIQUIFRESH ICE", preco: 0.00, img: "" },
+            { id: "246", desc: "GEL DENTAL CLOSEUP LIQUIFRESH REDHOT", preco: 0.00, img: "" },
+            { id: "247", desc: "GEL DENTAL ICE FRESH OVER GEL MAX COOL 90G", preco: 0.00, img: "" },
+            { id: "248", desc: "GEL DENTAL ICE FRESH OVER GEL MENTHOL RED 90G", preco: 0.00, img: "" },
+            { id: "249", desc: "GEL DENTAL ICE FRESH OVER GEL ULTRA MINT 90G", preco: 0.00, img: "" },
+            { id: "250", desc: "GEL DENTAL INFANTIL CONDOR AVENGERS 50G", preco: 0.00, img: "" },
+            { id: "251", desc: "GEL DENTAL INFANTIL CONDOR BARBIE 50G", preco: 0.00, img: "" },
+            { id: "252", desc: "GEL DENTAL INFANTIL CONDOR GALINHA PINTADINHA 50G", preco: 0.00, img: "" },
+            { id: "253", desc: "GEL DENTAL INFANTIL CONDOR LILICA RIPILICA 50G", preco: 0.00, img: "" },
+            { id: "254", desc: "GEL FIXADOR BRILHO MOLHADO 1 RED APPLE 230G", preco: 0.00, img: "" },
+            { id: "255", desc: "GEL FIXADOR EXTRA FIXACAO 3 RED APPLE 230G", preco: 0.00, img: "" },
+            { id: "256", desc: "GEL FIXADOR MEDIA FIXACAO 2 RED APPLE 230G", preco: 0.00, img: "" },
+            { id: "257", desc: "GEL FIXADOR MOICANO COLA AZUL 250G", preco: 0.00, img: "" },
+            { id: "258", desc: "GEL FIXADOR MOICANO COLA INCOLOR (VERMELHO) 250G", preco: 0.00, img: "" },
+            { id: "259", desc: "GEL FIXADOR T2W AZUL 220G", preco: 0.00, img: "" },
+            { id: "260", desc: "GEL FIXADOR T2W ROXO 220G", preco: 0.00, img: "" },
+            { id: "261", desc: "GEL FIXADOR T2W VERMELHO 220G", preco: 0.00, img: "" },
+            { id: "262", desc: "GELATINA CAP. ORIGEM SUPER ATIVADORA COND 400G", preco: 0.00, img: "" },
+            { id: "263", desc: "GELATINA CAP. ORIGEM SUPER DEFIN COND 400G", preco: 0.00, img: "" },
+            { id: "264", desc: "GELATINA CAP. ORIGEM SUPER FIXACAO COND 400G", preco: 0.00, img: "" },
+            { id: "265", desc: "GELATINA CAP. ORIGEM SUPER MODELADORA COND 400G", preco: 0.00, img: "" },
+            { id: "266", desc: "GELATINA CAP. ORIGEM SUPER VOLUME 400G", preco: 0.00, img: "" },
+            { id: "267", desc: "HASTE FLEXIVEL CARTUCHO COTTONBABY 150UN", preco: 0.00, img: "" },
+            { id: "268", desc: "HASTE FLEXIVEL CARTUCHO COTTONBABY 75UN 12X1", preco: 0.00, img: "" },
+            { id: "269", desc: "HASTE FLEXIVEL COTTONBABY POTE 150UN", preco: 0.00, img: "" },
+            { id: "270", desc: "HASTE FLEXIVEL DENGO C/150UN", preco: 0.00, img: "" },
+            { id: "271", desc: "HASTE FLEXIVEL DENGO COM 75UN 12X1", preco: 0.00, img: "" },
+            { id: "272", desc: "HASTES FLEX COTTON LINE BABY GIRL POTE C/150", preco: 0.00, img: "" },
+            { id: "273", desc: "HASTES FLEX COTTON LINE C/150 6X1", preco: 0.00, img: "" },
+            { id: "274", desc: "HASTES FLEX COTTON LINE C/75 12X1", preco: 0.00, img: "" },
+            { id: "275", desc: "HASTES FLEX COTTON LINE POTE C/150", preco: 0.00, img: "" },
+            { id: "276", desc: "HIDRATANTE DSD SKALA AGUA DE COCO 400ML", preco: 0.00, img: "" },
+            { id: "277", desc: "HIDRATANTE DSD SKALA AMEIXA E FIGO 400ML", preco: 0.00, img: "" },
+            { id: "278", desc: "HIDRATANTE DSD SKALA CAMOMILA 400ML", preco: 0.00, img: "" },
+            { id: "279", desc: "HIDRATANTE DSD SKALA ERVA DOCE 400ML", preco: 0.00, img: "" },
+            { id: "280", desc: "HIDRATANTE DSD SKALA LAVANDA 400ML", preco: 0.00, img: "" },
+            { id: "281", desc: "HIDRATANTE DSD SKALA LEITE ARROZ E ROSAS 400ML", preco: 0.00, img: "" },
+            { id: "282", desc: "HIDRATANTE DSD SKALA LOVE INTENSE 400ML", preco: 0.00, img: "" },
+            { id: "283", desc: "HIDRATANTE DSD SKALA MANTEIGA DE KARITE 400ML", preco: 0.00, img: "" },
+            { id: "284", desc: "HIDRATANTE DSD SKALA PROT. LEITE VEGE. 400ML", preco: 0.00, img: "" },
+            { id: "285", desc: "HIDRATANTE DSD SKALA ROSAS E AMENDOAS 400ML", preco: 0.00, img: "" },
+            { id: "286", desc: "HIDRATANTE GELEIA DE VASELINA FARMAX 70G", preco: 0.00, img: "" },
+            { id: "287", desc: "INSETIC ELETRICO PIRINSET LIQ. AP+REFIL", preco: 0.00, img: "" },
+            { id: "288", desc: "INSETIC ELETRICO PIRINSET PIRISA 4 PAST+VAP", preco: 0.00, img: "" },
+            { id: "289", desc: "MENTOS 3 PURE FRESH MINT 8,5G C/15", preco: 0.00, img: "" },
+            { id: "290", desc: "MENTOS 3 PURE FRESH SPEARMINT 8,5G C/15", preco: 0.00, img: "" },
+            { id: "291", desc: "MENTOS 3 PURE FRESH STRONG MINT 8,5GC/15", preco: 0.00, img: "" },
+            { id: "292", desc: "MENTOS 3 PURE FRUITMOR/MACA/FRAMB. 8,5GC/15", preco: 0.00, img: "" },
+            { id: "293", desc: "MENTOS COOL WHITE 8,5G BLUE RASPBERRY C/15", preco: 0.00, img: "" },
+            { id: "294", desc: "MENTOS COOL WHITE 8,5G FRESH MINT C/15", preco: 0.00, img: "" },
+            { id: "295", desc: "MENTOS POTE UP2U 56G MINT/TUTTI FRUTTI GFA. AZUL/ROSA", preco: 0.00, img: "" },
+            { id: "296", desc: "MENTOS PURE FRESH STICK FRESHMINT AZUL 16G 14X1", preco: 0.00, img: "" },
+            { id: "297", desc: "MENTOS PURE FRESH STICK WINTERGREEN VERDE 16G 14X1", preco: 0.00, img: "" },
+            { id: "298", desc: "MENTOS STICK 37,5G FANTA LARANJA C/16", preco: 0.00, img: "" },
+            { id: "299", desc: "MENTOS STICK 37,5G FRUTAS C/16", preco: 0.00, img: "" },
+            { id: "300", desc: "MENTOS STICK 37,5G FRUTAS VERMELHAS C/16", preco: 0.00, img: "" },
+            { id: "301", desc: "MENTOS STICK 37,5G MINT C/16", preco: 0.00, img: "" },
+            { id: "302", desc: "MENTOS STICK 37,5G NOVO RAINBOW C/16", preco: 0.00, img: "" },
+            { id: "303", desc: "MENTOS STICK 37,5G TUTTI FRUTTI C/16", preco: 0.00, img: "" },
+            { id: "304", desc: "MENTOS STICK 37,5G YOGURTE MORANGO C/16", preco: 0.00, img: "" },
+            { id: "305", desc: "MOEDAS SABOR CHOCOLATE BEL 500G", preco: 0.00, img: "" },
+            { id: "306", desc: "MULTI-INSETICIDA PROINSET 250ML", preco: 0.00, img: "" },
+            { id: "307", desc: "MULTI-INSETICIDA PROINSET 350ML", preco: 0.00, img: "" },
+            { id: "308", desc: "MULTI-INSETICIDA PROINSET EMB.ECON. S/CHEIRO 350ML", preco: 0.00, img: "" },
+            { id: "309", desc: "MULTI-INSETICIDA PROINSET EMB.ECONOMICA CITRONELA 350ML", preco: 0.00, img: "" },
+            { id: "310", desc: "MULTI-INSETICIDA PROINSET PROM. 450ML", preco: 0.00, img: "" },
+            { id: "311", desc: "NAFTALINA HIGIE PLUS 30G", preco: 0.00, img: "" },
+            { id: "312", desc: "NEUT. PURO AR AP+REFIL BABOO 12ML", preco: 0.00, img: "" },
+            { id: "313", desc: "NEUT. PURO AR AP+REFIL CAPIM LIMAO 12ML", preco: 0.00, img: "" },
+            { id: "314", desc: "NEUT. PURO AR AP+REFIL CITRUS 12ML", preco: 0.00, img: "" },
+            { id: "315", desc: "NEUT. PURO AR AP+REFIL CRAVO E CANELA 12ML", preco: 0.00, img: "" },
+            { id: "316", desc: "NEUT. PURO AR AP+REFIL ERVA DOCE 12ML", preco: 0.00, img: "" },
+            { id: "317", desc: "NEUT. PURO AR AP+REFIL TALCO 12ML", preco: 0.00, img: "" },
+            { id: "318", desc: "NEUT. PURO AR AP+REFIL VINOLIA 12ML", preco: 0.00, img: "" },
+            { id: "319", desc: "NEUT. PURO AR REFIL CAPIM LIMAO 12ML", preco: 0.00, img: "" },
+            { id: "320", desc: "NEUT. PURO AR REFIL CITRUS 12ML", preco: 0.00, img: "" },
+            { id: "321", desc: "NEUT. PURO AR REFIL ERVA DOCE 12ML", preco: 0.00, img: "" },
+            { id: "322", desc: "NEUT. PURO AR REFIL EUCALIPTO 12ML", preco: 0.00, img: "" },
+            { id: "323", desc: "NEUT. PURO AR REFIL LAVANDA 12ML", preco: 0.00, img: "" },
+            { id: "324", desc: "NEUT. PURO AR REFIL PETALAS DE ROSAS 12ML", preco: 0.00, img: "" },
+            { id: "325", desc: "NEUT. PURO AR REFIL VINOLIA 12ML", preco: 0.00, img: "" },
+            { id: "326", desc: "NEUTRALIZADOR PURO AR CAPIM LIMAO 350ML", preco: 0.00, img: "" },
+            { id: "327", desc: "NEUTRALIZADOR PURO AR LAVANDA 350ML", preco: 0.00, img: "" },
+            { id: "328", desc: "NEUTRALIZADOR PURO AR PETALA DE ROSAS 350ML", preco: 0.00, img: "" },
+            { id: "329", desc: "NEUTRALIZADOR PURO AR TALCO 350ML", preco: 0.00, img: "" },
+            { id: "330", desc: "NEUTRALIZADOR ULTRA FRESH ALECRIM 400ML", preco: 0.00, img: "" },
+            { id: "331", desc: "NEUTRALIZADOR ULTRA FRESH BAUNILHA 400ML", preco: 0.00, img: "" },
+            { id: "332", desc: "NEUTRALIZADOR ULTRA FRESH CAFE 400ML", preco: 0.00, img: "" },
+            { id: "333", desc: "NEUTRALIZADOR ULTRA FRESH CITRUS 400ML", preco: 0.00, img: "" },
+            { id: "334", desc: "NEUTRALIZADOR ULTRA FRESH CRAVO E CANELA 400ML", preco: 0.00, img: "" },
+            { id: "335", desc: "NEUTRALIZADOR ULTRA FRESH ERVA DOCE 400ML", preco: 0.00, img: "" },
+            { id: "336", desc: "NEUTRALIZADOR ULTRA FRESH JASMIM 400ML", preco: 0.00, img: "" },
+            { id: "337", desc: "PRENDEDOR MADEIRA GABOARDI C/12UN", preco: 0.00, img: "" },
+            { id: "338", desc: "PRENDEDOR MADEIRA GIGANTE PARANÁ C/12", preco: 0.00, img: "" },
+            { id: "339", desc: "PRENDEDOR PLASTICO GABOARDI C/12UN", preco: 0.00, img: "" },
+            { id: "340", desc: "PRESERVATIVO BLOWTEX ELITE C/3", preco: 0.00, img: "" },
+            { id: "341", desc: "PRESERVATIVO BLOWTEX ELITE MORANGO C/3", preco: 0.00, img: "" },
+            { id: "342", desc: "PRESERVATIVO BLOWTEX LUBRIFICADO C/3", preco: 0.00, img: "" },
+            { id: "343", desc: "PRESERVATIVO BLOWTEX MENTA C/3", preco: 0.00, img: "" },
+            { id: "344", desc: "PRESERVATIVO BLOWTEX MORANGO C/ CHOCOLATE C/3", preco: 0.00, img: "" },
+            { id: "345", desc: "PRESERVATIVO BLOWTEX MORANGO C/3", preco: 0.00, img: "" },
+            { id: "346", desc: "PRESERVATIVO BLOWTEX SENSITIVE C/3", preco: 0.00, img: "" },
+            { id: "347", desc: "PRESERVATIVO BLOWTEX TUTTI FRUTTI C/3", preco: 0.00, img: "" },
+            { id: "348", desc: "PRESERVATIVO BLOWTEX UVA VERDE CONDOM C/3", preco: 0.00, img: "" },
+            { id: "349", desc: "PRESERVATIVO C/6 BLOWTEX MORANGO", preco: 0.00, img: "" },
+            { id: "350", desc: "PRESERVATIVO C/9 BLOWTEX LUBRIFICADO L9P6", preco: 0.00, img: "" },
+            { id: "351", desc: "PRESERVATIVO C/9 BLOWTEX MENTA L9P6", preco: 0.00, img: "" },
+            { id: "352", desc: "PRESERVATIVO PRUDENCE TUTTI FRUTTI C/3", preco: 0.00, img: "" },
+            { id: "353", desc: "PRESERVATIVO PRUDENCE UVA C/3", preco: 0.00, img: "" },
+            { id: "354", desc: "PROTETOR DIARIO COTTONBABY LADY S/ ABAS C/15UN", preco: 0.00, img: "" },
+            { id: "355", desc: "PROTETOR DIARIO COTTONBABY LADY S/ ABAS C/40", preco: 0.00, img: "" },
+            { id: "356", desc: "PROTETOR FACIAL SUNLESS FPS50 60G OF", preco: 0.00, img: "" },
+            { id: "357", desc: "PÓ DESCOLORANTE FARMAX 20G CAMOMILA", preco: 0.00, img: "" },
+            { id: "358", desc: "PÓ DESCOLORANTE FARMAX 20G COCO", preco: 0.00, img: "" },
+            { id: "359", desc: "PÓ DESCOLORANTE FARMAX 20G QUERATIΝΑ", preco: 0.00, img: "" },
+            { id: "360", desc: "PÓ DESCOLORANTE FARMAX 8G CAMOMILA", preco: 0.00, img: "" },
+            { id: "361", desc: "PÓ DESCOLORANTE FARMAX 8G COCO", preco: 0.00, img: "" },
+            { id: "362", desc: "PÓ DESCOLORANTE FARMAX 8G QUERATINA", preco: 0.00, img: "" },
+            { id: "363", desc: "PÓ DESCOLORANTE YAMÁ 20G CAMOMILA", preco: 0.00, img: "" },
+            { id: "364", desc: "PÓ DESCOLORANTE YAMÁ 20G GERMEN DE TRIGO", preco: 0.00, img: "" },
+            { id: "365", desc: "PÓ DESCOLORANTE YAMÁ 20G PLATINADO", preco: 0.00, img: "" },
+            { id: "366", desc: "PÓ DESCOLORANTE YAMÁ 20G QUERATIΝΑ", preco: 0.00, img: "" },
+            { id: "367", desc: "PÓ DESCOLORANTE YAMÁ 20G TRADICIONAL", preco: 0.00, img: "" },
+            { id: "368", desc: "PÓ DESCOLORANTE YAMÁ 50G CAMOMILA", preco: 0.00, img: "" },
+            { id: "369", desc: "PÓ DESCOLORANTE YAMÁ 50G GERMEN DE TRIGO", preco: 0.00, img: "" },
+            { id: "370", desc: "PÓ DESCOLORANTE YAMÁ 50G PLATINADO", preco: 0.00, img: "" },
+            { id: "371", desc: "PÓ DESCOLORANTE YAMÁ 50G QUERATINA", preco: 0.00, img: "" },
+            { id: "372", desc: "PÓ DESCOLORANTE YAMÁ 50G TRADICIONAL", preco: 0.00, img: "" },
+            { id: "373", desc: "RAVOR HAIR SPRAY 200ML EXTRA FORTE", preco: 0.00, img: "" },
+            { id: "374", desc: "RAVOR HAIR SPRAY 200ML FORTE", preco: 0.00, img: "" },
+            { id: "375", desc: "RAVOR HAIR SPRAY 400ML EXTRA FORTE", preco: 0.00, img: "" },
+            { id: "376", desc: "RAVOR HAIR SPRAY 400ML FORTE", preco: 0.00, img: "" },
+            { id: "377", desc: "RECARGA GILLETTE MACH 3 TRAD. C/2", preco: 0.00, img: "" },
+            { id: "378", desc: "REFRESCO POP FRUTA ABACAXI 25G 20X1", preco: 0.00, img: "" },
+            { id: "379", desc: "REFRESCO POP FRUTA ABACAXI C/ HORTELA 25G 20X1", preco: 0.00, img: "" },
+            { id: "380", desc: "REFRESCO POP FRUTA CAJU 25G 20X1", preco: 0.00, img: "" },
+            { id: "381", desc: "REFRESCO POP FRUTA GOIABA 25G 20X1", preco: 0.00, img: "" },
+            { id: "382", desc: "REFRESCO POP FRUTA GUARANA 25G 20X1", preco: 0.00, img: "" },
+            { id: "383", desc: "REFRESCO POP FRUTA JABUTICABA 25G 20X1", preco: 0.00, img: "" },
+            { id: "384", desc: "REFRESCO POP FRUTA LARANJA 25G 20X1", preco: 0.00, img: "" },
+            { id: "385", desc: "SHAMP COTTONBABY SNOOPY BABY GOTAS DE CAMOMILA 200ML", preco: 0.00, img: "" },
+            { id: "386", desc: "SHAMP COTTONBABY SNOOPY BABY TOQUE DE ALGODAO 200ML", preco: 0.00, img: "" },
+            { id: "387", desc: "SHAMP. HEAD SHOULDERS 3 EM 1 MEN 200ML", preco: 0.00, img: "" },
+            { id: "388", desc: "SHAMP. HEAD SHOULDERS ANTICOCEIRA 200ML", preco: 0.00, img: "" },
+            { id: "389", desc: "SHAMP. HEAD SHOULDERS ANTIQUEDA MEN 200ML", preco: 0.00, img: "" },
+            { id: "390", desc: "SHAMP. HEAD SHOULDERS LIMPEZA EFICAZ 200ML", preco: 0.00, img: "" },
+            { id: "391", desc: "SHAMP. HEAD SHOULDERS MENTA ICE MEN 200ML", preco: 0.00, img: "" },
+            { id: "392", desc: "SHAMP. HEAD SHOULDERS OLD SPICE MEN 200ML", preco: 0.00, img: "" },
+            { id: "393", desc: "SHAMPOO CLEAR BOTANIQUE ANTICOCEIRA 200ML", preco: 0.00, img: "" },
+            { id: "394", desc: "SHAMPOO CLEAR FEM FLOR DE CERJEIRA 200ML", preco: 0.00, img: "" },
+            { id: "395", desc: "SHAMPOO CLEAR FEM HIDRATACAO INTENSA 200ML", preco: 0.00, img: "" },
+            { id: "396", desc: "SHAMPOO CLEAR MASC ALIVIO DA COCEIRA 200ML", preco: 0.00, img: "" },
+            { id: "397", desc: "SHAMPOO CLEAR MASC DETOX DIARIO 200ML", preco: 0.00, img: "" },
+            { id: "398", desc: "SHAMPOO CLEAR MASC ICE CABELO/ BARBA 200ML", preco: 0.00, img: "" },
+            { id: "399", desc: "SHAMPOO CLEAR MASC ICE COOL MENTHOL 200ML", preco: 0.00, img: "" },
+            { id: "400", desc: "SHAMPOO CLEAR MASC LIMP. DIARIA 2 EM 1 200ML", preco: 0.00, img: "" },
+            { id: "401", desc: "SHAMPOO CLEAR MASC LIMP. PROFUNDA 200ML", preco: 0.00, img: "" },
+            { id: "402", desc: "SHAMPOO CLEAR MASC QUEDA CONTROL 200ML 12X1", preco: 0.00, img: "" },
+            { id: "403", desc: "SHAMPOO DARLING 350ML 2EM1", preco: 0.00, img: "" },
+            { id: "404", desc: "SHAMPOO DARLING 350ML CERAMIDAS", preco: 0.00, img: "" },
+            { id: "405", desc: "SHAMPOO DARLING 350ML DETOX", preco: 0.00, img: "" },
+            { id: "406", desc: "SHAMPOO DARLING 350ML TILIA", preco: 0.00, img: "" },
+            { id: "407", desc: "SHAMPOO GLIC. CAMOMILA SKALINHA BEBE 200ML", preco: 0.00, img: "" },
+            { id: "408", desc: "SHAMPOO GLIC. SALVIA SKALINHA BEBE 200ML", preco: 0.00, img: "" },
+            { id: "409", desc: "SHAMPOO MONANGE BOOST CRESCIMENTO 325ML", preco: 0.00, img: "" },
+            { id: "410", desc: "SHAMPOO MONANGE CACHOS DEFINIDOS 325ML", preco: 0.00, img: "" },
+            { id: "411", desc: "SHAMPOO MONANGE DETOXTERAPIA 325ML", preco: 0.00, img: "" },
+            { id: "412", desc: "SHAMPOO MONANGE HIDRATAÇÃO INTENSIVA 325ML", preco: 0.00, img: "" },
+            { id: "413", desc: "SHAMPOO MONANGE LISOS BRILHANTES 325ML", preco: 0.00, img: "" },
+            { id: "414", desc: "SHAMPOO MONANGE REPARAÇÃO PÓS QUÍMICA 325ML", preco: 0.00, img: "" },
+            { id: "415", desc: "SHAMPOO MONANGE RESTAURAÇÃO COMPLETA 325ML", preco: 0.00, img: "" },
+            { id: "416", desc: "SHAMPOO ORIGEM ABACATE 325ML", preco: 0.00, img: "" },
+            { id: "417", desc: "SHAMPOO PALMOLIVE BOOM DE HIDRATAÇÃO 350ML", preco: 0.00, img: "" },
+            { id: "418", desc: "SHAMPOO PALMOLIVE CACHOS LIVRES COCO 350ML", preco: 0.00, img: "" },
+            { id: "419", desc: "SHAMPOO PALMOLIVE CERAMIDAS B5 350ML", preco: 0.00, img: "" },
+            { id: "420", desc: "SHAMPOO PALMOLIVE DETOX 350ML", preco: 0.00, img: "" },
+            { id: "421", desc: "SHAMPOO PALMOLIVE LISOS RADIANTES 350ML", preco: 0.00, img: "" },
+            { id: "422", desc: "SHAMPOO PALMOLIVE MACIEZ PROLONGADA 350ML", preco: 0.00, img: "" },
+            { id: "423", desc: "SHAMPOO PALMOLIVE NEUTRO 350ML", preco: 0.00, img: "" },
+            { id: "424", desc: "SHAMPOO PALMOLIVE PRETOS VIBRANTES 350ML", preco: 0.00, img: "" },
+            { id: "425", desc: "SHAMPOO PALMOLIVE SOS HYD. ACIDO HIALURONICO. 350ML", preco: 0.00, img: "" },
+            { id: "426", desc: "SHAMPOO POM POM SUAVE 200ML", preco: 0.00, img: "" },
+            { id: "427", desc: "SHAMPOO SKALA ARGAN 325ML", preco: 0.00, img: "" },
+            { id: "428", desc: "SHAMPOO SKALA 12 EM 1 325ML", preco: 0.00, img: "" },
+            { id: "429", desc: "SHAMPOO SKALA ABACATE 325ML", preco: 0.00, img: "" },
+            { id: "430", desc: "SHAMPOO SKALA AMIDO DE MILHO 325ML", preco: 0.00, img: "" },
+            { id: "431", desc: "SHAMPOO SKALA BABOSA 325ML", preco: 0.00, img: "" },
+            { id: "432", desc: "SHAMPOO SKALA BOMBA VITAMINAS 325ML", preco: 0.00, img: "" }
+        ];
+
+        let carrinho = {};
+
+        function renderizar(itens = produtos) {
+            const vitrine = document.getElementById('vitrine');
+            vitrine.innerHTML = itens.map(p => `
+                <div class="bg-white p-4 rounded-[30px] shadow-lg border border-white flex flex-col justify-between hover:shadow-2xl transition-all group relative">
+                    <img src="${p.img || 'https://via.placeholder.com/150?text=Radar+Dist'}" class="img-produto">
+                    <div class="mb-4">
+                        <p class="text-[9px] font-black text-blue-400 mb-1 uppercase tracking-tighter">REF: ${p.id}</p>
+                        <h3 class="font-bold text-slate-800 text-[11px] uppercase leading-tight h-8 overflow-hidden">${p.desc}</h3>
+                        <p class="text-blue-600 font-black text-xl mt-1 italic tracking-tighter">R$ ${p.preco.toFixed(2)}</p>
+                    </div>
+                    <div class="flex items-center justify-between bg-slate-50 p-1 rounded-2xl border">
+                        <button onclick="mudarQtd('${p.id}', -1)" class="w-8 h-8 bg-white rounded-xl shadow font-black text-red-500">-</button>
+                        <input type="number" id="qtd-${p.id}" value="${carrinho[p.id] || 0}" 
+                            oninput="atualizarQtdManual('${p.id}', this.value)"
+                            class="w-10 bg-transparent text-center font-black text-sm outline-none">
+                        <button onclick="mudarQtd('${p.id}', 1)" class="w-8 h-8 bg-white rounded-xl shadow font-black text-green-500">+</button>
+                    </div>
+                </div>
+            `).join('');
+            atualizarTotal();
+        }
+
+        function atualizarQtdManual(id, valor) {
+            let qtd = parseInt(valor) || 0;
+            carrinho[id] = qtd < 0 ? 0 : qtd;
+            atualizarTotal();
+        }
+
+        function mudarQtd(id, delta) {
+            carrinho[id] = (carrinho[id] || 0) + delta;
+            if (carrinho[id] < 0) carrinho[id] = 0;
+            document.getElementById(`qtd-${id}`).value = carrinho[id];
+            atualizarTotal();
+        }
+
+        function atualizarTotal() {
+            let total = 0;
+            produtos.forEach(p => { total += (carrinho[p.id] || 0) * p.preco; });
+            document.getElementById('total-geral').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
+        }
+
+        function filtrar() {
+            const t = document.getElementById('busca').value.toLowerCase();
+            renderizar(produtos.filter(p => p.desc.toLowerCase().includes(t) || p.id === t));
+        }
+
+        function fazerLogin() { if (prompt("Acesso Radar:") === SENHA_MESTRA) abrirAdmin(); }
+
+        function abrirAdmin() {
+            const lista = document.getElementById('lista-edicao');
+            lista.innerHTML = produtos.map((p, index) => `
+                <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border mb-2">
+                    <input type="text" value="${p.img}" onchange="produtos[${index}].img = this.value" placeholder="URL Foto" class="w-20 p-1 text-[10px] rounded border">
+                    <input type="text" value="${p.desc}" onchange="produtos[${index}].desc = this.value" class="flex-1 bg-transparent text-[10px] font-bold uppercase">
+                    <input type="number" step="0.01" value="${p.preco}" onchange="produtos[${index}].preco = parseFloat(this.value)" class="w-16 p-1 rounded font-black text-blue-600 text-[10px] border">
+                    <button onclick="excluirProduto(${index})" class="text-red-500 px-2 font-bold">✕</button>
+                </div>
+            `).join('');
+            document.getElementById('modalAdmin').style.display = 'block';
+        }
+
+        function adicionarProduto() {
+            const desc = document.getElementById('novo-desc').value;
+            const img = document.getElementById('novo-img').value;
+            const preco = parseFloat(document.getElementById('novo-preco').value);
+            if (!desc || isNaN(preco)) return alert("Preencha Nome e Preço!");
+            produtos.push({ id: (produtos.length + 1).toString(), desc: desc.toUpperCase(), preco: preco, img: img });
+            abrirAdmin();
+        }
+
+        function excluirProduto(index) { if (confirm("Excluir item?")) { produtos.splice(index, 1); abrirAdmin(); } }
+        function fecharAdmin() { document.getElementById('modalAdmin').style.display = 'none'; renderizar(); }
+
+        function exportarDados() {
+            const code = document.documentElement.outerHTML.replace(/let produtos = \[[\s\S]*?\];/, `let produtos = ${JSON.stringify(produtos, null, 8)};`);
+            const blob = new Blob([code], {type: "text/html"});
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "index.html";
+            a.click();
+        }
+
+        function enviarWhatsApp() {
+            const nome = document.getElementById('cliente_nome').value;
+            const end = document.getElementById('cliente_end').value;
+            if (!nome || !end) return alert("Preencha Nome e Endereço!");
+            let msg = `*PEDIDO - RADAR DISTRIBUIDORA*\n\n👤 *CLIENTE:* ${nome}\n📍 *ENDEREÇO:* ${end}\n\n`;
+            let tem = false;
+            produtos.forEach(p => {
+                if (carrinho[p.id] > 0) {
+                    msg += `✅ ${carrinho[p.id]}x ${p.desc} - R$ ${(p.preco * carrinho[p.id]).toFixed(2)}\n`;
+                    tem = true;
+                }
+            });
+            if (!tem) return alert("Selecione itens!");
+            msg += `\n💰 *TOTAL: ${document.getElementById('total-geral').innerText}*`;
+            window.open(`https://wa.me/${FONE}?text=${encodeURIComponent(msg)}`);
+        }
+        
+        renderizar();
+    </script>
+</body>
+</html>
