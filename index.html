@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radar Distribuidora - Sistema Profissional</title>
+    <title>Radar Distribuidora - Sistema 432 Itens</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -13,37 +13,35 @@
         .img-container { width: 100%; height: 120px; background: #fff; border-radius: 20px; display: flex; align-items: center; justify-content: center; }
         .img-produto { max-width: 100%; max-height: 100%; object-fit: contain; }
         .aba-ativa { background-color: #2563eb !important; color: white !important; }
-        .hidden { display: none !important; }
         
-        /* ESTILO DE IMPRESSÃO */
         @media print {
             body * { visibility: hidden; background: white !important; }
             #historico-vendas, #historico-vendas * { visibility: visible; }
             #historico-vendas { position: absolute; left: 0; top: 0; width: 100%; }
             .no-print { display: none !important; }
-            .print-header { display: block !important; visibility: visible !important; border-bottom: 4px double #000; padding-bottom: 10px; margin-bottom: 20px; }
+            .print-header { display: block !important; visibility: visible !important; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 20px; text-align: center; }
             .print-header * { visibility: visible !important; }
         }
     </style>
 </head>
 <body class="pb-80">
 
-    <div class="print-header hidden text-center">
-        <h1 style="font-size: 24px; font-weight: 900; color: #000;">RADAR DISTRIBUIDORA</h1>
-        <p style="font-size: 12px; font-weight: bold;">RELATÓRIO DE SEPARAÇÃO E CONFERÊNCIA</p>
+    <div class="print-header hidden">
+        <h1 style="font-size: 28px; font-weight: 900; margin-bottom: 0;">RADAR DISTRIBUIDORA</h1>
+        <p style="font-size: 14px; font-weight: 700; text-transform: uppercase;">Relatório de Separação e Conferência</p>
     </div>
 
     <header class="bg-blue-600 text-white p-6 sticky top-0 z-50 shadow-2xl flex justify-between items-center rounded-b-[40px] no-print">
         <div>
             <h1 class="text-2xl font-black italic uppercase tracking-tighter">RADAR <span class="font-extralight text-blue-200">DISTRIBUIDORA</span></h1>
-            <p class="text-[10px] font-bold opacity-70 tracking-[2px]">SISTEMA DE GESTÃO 2025</p>
+            <p class="text-[10px] font-bold opacity-70">SISTEMA INTEGRADO - 432 ITENS</p>
         </div>
-        <button onclick="fazerLogin()" class="bg-blue-700 p-3 rounded-2xl text-[10px] font-black uppercase">Painel ADM</button>
+        <button onclick="fazerLogin()" class="bg-blue-700 p-3 rounded-2xl text-[10px] font-black uppercase shadow-inner">Painel ADM</button>
     </header>
 
     <main class="container mx-auto p-4 max-w-6xl no-print">
         <div class="relative my-8">
-            <input type="text" id="busca" oninput="filtrar()" placeholder="Pesquisar entre os 432 itens..." 
+            <input type="text" id="busca" oninput="filtrar()" placeholder="Procurar produto ou referência..." 
                 class="w-full p-6 pl-14 bg-white border-none rounded-3xl shadow-xl focus:ring-4 focus:ring-blue-400 outline-none text-lg">
             <span class="absolute left-6 top-6 text-xl opacity-30">🔍</span>
         </div>
@@ -57,49 +55,39 @@
                 <button onclick="fecharAdmin()" class="bg-slate-100 p-3 rounded-full">✕</button>
             </div>
             
-            <div class="flex gap-2 mb-8 border-b pb-3 overflow-x-auto no-print">
-                <button onclick="mudarAba('produtos')" id="btn-produtos" class="aba-btn aba-ativa px-6 py-3 rounded-2xl font-black text-xs uppercase">Produtos (432)</button>
+            <div class="flex gap-2 mb-8 border-b pb-3 overflow-x-auto">
+                <button onclick="mudarAba('produtos')" id="btn-produtos" class="aba-btn aba-ativa px-6 py-3 rounded-2xl font-black text-xs uppercase">Produtos</button>
                 <button onclick="mudarAba('vendas')" id="btn-vendas" class="aba-btn bg-slate-100 text-slate-500 px-6 py-3 rounded-2xl font-black text-xs uppercase">Vendas</button>
-                <button onclick="mudarAba('financeiro')" id="btn-financeiro" class="aba-btn bg-slate-100 text-slate-500 px-6 py-3 rounded-2xl font-black text-xs uppercase">Financeiro</button>
             </div>
 
-            <div id="aba-produtos" class="secao-aba no-print">
+            <div id="aba-produtos" class="secao-aba">
                 <div id="lista-edicao" class="space-y-2 max-h-[500px] overflow-y-auto pr-2"></div>
             </div>
 
             <div id="aba-vendas" class="secao-aba hidden">
-                <div class="flex justify-between items-center mb-6 no-print">
-                    <h3 class="font-black text-slate-700 uppercase italic">Histórico de Pedidos</h3>
-                    <button onclick="window.print()" class="bg-slate-900 text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase flex items-center gap-2">
-                        <span>🖨️ Imprimir Pedidos</span>
-                    </button>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-black text-slate-700 uppercase italic">Histórico</h3>
+                    <button onclick="window.print()" class="bg-black text-white px-6 py-3 rounded-2xl text-[10px] font-black uppercase">🖨️ Imprimir</button>
                 </div>
                 <div id="historico-vendas" class="space-y-6"></div>
             </div>
 
-            <div id="aba-financeiro" class="secao-aba hidden no-print">
-                <div class="p-10 bg-blue-600 rounded-[40px] text-center shadow-xl">
-                    <p class="text-[10px] font-black text-blue-200 uppercase mb-2 tracking-[3px]">Faturamento Total</p>
-                    <p id="fin-total" class="text-6xl font-black text-white italic tracking-tighter">R$ 0,00</p>
-                </div>
-            </div>
-
-            <button onclick="exportarDados()" class="no-print w-full bg-blue-600 text-white py-6 mt-8 rounded-3xl font-black uppercase shadow-2xl hover:bg-blue-700 transition-all">SALVAR TUDO E ATUALIZAR SITE</button>
+            <button onclick="exportarDados()" class="w-full bg-blue-600 text-white py-6 mt-8 rounded-3xl font-black uppercase shadow-2xl">SALVAR TUDO E ATUALIZAR SITE</button>
         </div>
     </div>
 
     <div class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t p-6 shadow-2xl z-40 rounded-t-[50px] no-print">
         <div class="container mx-auto max-w-5xl">
             <div class="grid grid-cols-2 gap-4 mb-4">
-                <input type="text" id="cliente_nome" placeholder="Nome da Loja / Cliente" class="p-4 rounded-2xl bg-slate-100 font-bold border-2 border-transparent focus:border-blue-500 outline-none">
-                <input type="text" id="cliente_end" placeholder="Cidade / Bairro" class="p-4 rounded-2xl bg-slate-100 font-bold border-2 border-transparent focus:border-blue-500 outline-none">
+                <input type="text" id="cliente_nome" placeholder="Nome da Loja" class="p-4 rounded-2xl bg-slate-100 font-bold outline-none">
+                <input type="text" id="cliente_end" placeholder="Cidade" class="p-4 rounded-2xl bg-slate-100 font-bold outline-none">
             </div>
             <div class="flex justify-between items-center">
                 <div>
-                    <span class="text-slate-400 text-[10px] font-black uppercase">Subtotal do Pedido</span>
+                    <span class="text-slate-400 text-[10px] font-black uppercase">Subtotal</span>
                     <p id="total-geral" class="text-4xl font-black text-blue-600 italic">R$ 0,00</p>
                 </div>
-                <button onclick="enviarWhatsApp()" class="bg-green-500 text-white px-12 py-5 rounded-[30px] font-black uppercase shadow-xl hover:scale-105 transition-all">Finalizar WhatsApp</button>
+                <button onclick="enviarWhatsApp()" class="bg-green-500 text-white px-10 py-5 rounded-[30px] font-black uppercase shadow-xl hover:scale-105 transition-all">Enviar Pedido</button>
             </div>
         </div>
     </div>
@@ -109,19 +97,28 @@
         const CHAVE_PIX = "09782307440";
         const SENHA_MESTRA = "1234";
 
-        let produtos = [
-            { id: "1", desc: "ABS COTTON LINE C/16 SUAVE C/ABAS", preco: 0.00, img: "" },
-            { id: "2", desc: "ABS COTTON LINE C/8 SECA C/ ABAS", preco: 0.00, img: "" },
-            { id: "3", desc: "ABS COTTON LINE C/8 SECA S/ ABAS", preco: 0.00, img: "" },
-            { id: "4", desc: "ABS COTTON LINE C/8 SUAVE C/ ABAS", preco: 0.00, img: "" },
-            { id: "5", desc: "ABS COTTON LINE C/8 SUAVE S/ ABAS", preco: 0.00, img: "" }
+        // COLOQUE SEUS NOMES AQUI PARA IMPORTAR EM MASSA (OPCIONAL)
+        let listaNomes = [
+            "ABS COTTON LINE C/16 SUAVE C/ABAS", 
+            "ABS COTTON LINE C/8 SECA C/ ABAS",
+            "ABS COTTON LINE C/8 SECA S/ ABAS",
+            "ABS COTTON LINE C/8 SUAVE C/ ABAS",
+            "ABS COTTON LINE C/8 SUAVE S/ ABAS",
+            "ABS COTTONBABY LADY C/16UN SUAVE C/ ABAS",
+            "ABS INTERNO INTIMUS MEDIO C/8",
+            "ABS INTIMUS C/32 SUAVE C/ ABAS"
+            // Continue colando seus nomes aqui...
         ];
 
-        // GERA OS 432 CASO NÃO EXISTAM
-        if(produtos.length < 432) {
-            for(let i = produtos.length + 1; i <= 432; i++) {
-                produtos.push({ id: i.toString(), desc: "PRODUTO REF " + i, preco: 0.00, img: "" });
-            }
+        let produtos = [];
+        // Criando os 432 itens
+        for (let i = 1; i <= 432; i++) {
+            produtos.push({
+                id: i.toString(),
+                desc: listaNomes[i-1] || "PRODUTO REF " + i,
+                preco: 0.00,
+                img: ""
+            });
         }
 
         let carrinho = {};
@@ -130,17 +127,17 @@
         function renderizar(itens = produtos) {
             const vitrine = document.getElementById('vitrine');
             vitrine.innerHTML = itens.map(p => `
-                <div class="bg-white p-4 rounded-[35px] shadow-lg flex flex-col justify-between hover:shadow-2xl transition-all">
-                    <div class="img-container"><img src="${p.img || 'https://via.placeholder.com/150?text=Radar'}" class="img-produto" onerror="this.src='https://via.placeholder.com/150?text=Radar'"></div>
+                <div class="bg-white p-4 rounded-[30px] shadow-lg flex flex-col justify-between hover:scale-[1.02] transition-all">
+                    <div class="img-container"><img src="${p.img || 'https://via.placeholder.com/150?text=Radar'}" class="img-produto"></div>
                     <div class="mt-4">
-                        <p class="text-[7px] font-black text-blue-500 uppercase">Ref: ${p.id}</p>
+                        <p class="text-[7px] font-black text-blue-500 uppercase">REF: ${p.id}</p>
                         <h3 class="font-bold text-slate-800 text-[10px] uppercase h-8 overflow-hidden">${p.desc}</h3>
                         <p class="text-blue-600 font-black text-xl mt-1 italic text-right">R$ ${p.preco.toFixed(2).replace('.', ',')}</p>
                     </div>
-                    <div class="flex items-center justify-between bg-slate-50 p-1 rounded-2xl mt-2 border border-slate-200">
-                        <button onclick="mudarQtd('${p.id}', -1)" class="w-9 h-9 bg-white rounded-xl shadow font-black text-red-500">-</button>
+                    <div class="flex items-center justify-between bg-slate-50 p-1 rounded-2xl mt-2 border">
+                        <button onclick="mudarQtd('${p.id}', -1)" class="w-8 h-8 bg-white rounded-xl shadow font-black text-red-500">-</button>
                         <input type="number" id="qtd-${p.id}" value="${carrinho[p.id] || 0}" class="w-10 bg-transparent text-center font-black text-sm outline-none" readonly>
-                        <button onclick="mudarQtd('${p.id}', 1)" class="w-9 h-9 bg-white rounded-xl shadow font-black text-green-500">+</button>
+                        <button onclick="mudarQtd('${p.id}', 1)" class="w-8 h-8 bg-white rounded-xl shadow font-black text-green-500">+</button>
                     </div>
                 </div>
             `).join('');
@@ -167,82 +164,41 @@
             document.getElementById('aba-' + aba).classList.remove('hidden');
             document.getElementById('btn-' + aba).classList.add('aba-ativa');
             if(aba === 'vendas') renderVendas();
-            if(aba === 'financeiro') renderFinanceiro();
         }
 
         function renderVendas() {
             const container = document.getElementById('historico-vendas');
-            if(historicoVendas.length === 0) return container.innerHTML = '<p class="text-center py-20 opacity-30 font-black uppercase">Nenhum Pedido para Exibir</p>';
-            
             container.innerHTML = historicoVendas.map(v => `
-                <div class="p-6 bg-white border-2 border-slate-300 rounded-[30px] shadow-sm page-break">
-                    <div class="flex justify-between items-start mb-4 pb-4 border-b border-dashed border-slate-300">
-                        <div>
-                            <p class="text-[10px] font-black text-blue-600 uppercase">PEDIDO REALIZADO EM:</p>
-                            <p class="text-sm font-black text-slate-800">${v.data}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] font-black text-green-600 uppercase">VALOR TOTAL:</p>
-                            <p class="text-2xl font-black text-slate-900">R$ ${v.total}</p>
-                        </div>
+                <div class="p-6 bg-white border-2 border-slate-300 rounded-[30px] mb-4">
+                    <div class="flex justify-between border-b pb-2 mb-2 font-black text-[10px]">
+                        <span>DATA: ${v.data}</span>
+                        <span class="text-blue-600 uppercase">CLIENTE: ${v.cliente}</span>
                     </div>
-                    <div class="mb-4">
-                        <p class="text-[10px] font-black text-slate-400 uppercase italic">DADOS DO CLIENTE:</p>
-                        <p class="text-lg font-black text-slate-800 uppercase italic">👤 ${v.cliente}</p>
-                        <p class="text-sm font-bold text-slate-500 uppercase">📍 ${v.cidade}</p>
-                    </div>
-                    <div class="bg-slate-50 p-4 rounded-2xl">
-                        <p class="text-[10px] font-black text-slate-400 uppercase mb-2 border-b pb-1">ITENS PARA SEPARAÇÃO:</p>
-                        <div class="text-xs font-bold text-slate-800 leading-relaxed">
-                            ${v.resumoItens.replace(/\n/g, '<br>')}
-                        </div>
-                    </div>
+                    <div class="text-[11px] font-bold">${v.resumoItens.replace(/\n/g, '<br>')}</div>
+                    <div class="mt-4 pt-2 border-t text-right font-black text-lg">TOTAL: R$ ${v.total}</div>
                 </div>
             `).join('');
-        }
-
-        function renderFinanceiro() {
-            let total = 0;
-            historicoVendas.forEach(v => total += parseFloat(v.total.replace('.', '').replace(',', '.')));
-            document.getElementById('fin-total').innerText = `R$ ${total.toFixed(2).replace('.', ',')}`;
         }
 
         function enviarWhatsApp() {
             const nome = document.getElementById('cliente_nome').value;
             const end = document.getElementById('cliente_end').value;
             const total = document.getElementById('total-geral').innerText;
-            if(!nome || !end) return alert("Por favor, preencha o Nome e a Cidade!");
+            if(!nome || !end) return alert("Preencha Nome e Cidade!");
             
-            let msg = `*🚀 PEDIDO: RADAR DISTRIBUIDORA*\n\n👤 *CLIENTE:* ${nome}\n📍 *CIDADE:* ${end}\n\n*--- ITENS DO PEDIDO ---*\n`;
+            let msg = `*PEDIDO RADAR DISTRIBUIDORA*\n\n👤 *CLIENTE:* ${nome}\n📍 *CIDADE:* ${end}\n\n*ITENS:*\n`;
             let resumoVenda = "";
-            let tem = false;
-
             produtos.forEach(p => { 
                 if(carrinho[p.id] > 0) { 
                     let linha = `✅ ${carrinho[p.id]}x ${p.desc}\n`;
-                    msg += linha;
-                    resumoVenda += linha;
-                    tem = true; 
+                    msg += linha; resumoVenda += linha;
                 }
             });
 
-            if(!tem) return alert("Seu carrinho está vazio!");
+            msg += `\n💰 *TOTAL: ${total}*`;
+            msg += `\n\n🔑 *PIX PARA PAGAMENTO:* \`${CHAVE_PIX}\``;
 
-            msg += `\n*TOTAL: ${total}*\n`;
-            msg += `\n*━━━━━━━━━━━━━━━━━━━━*\n`;
-            msg += `💰 *PAGAMENTO VIA PIX*\n`;
-            msg += `🔑 *CHAVE:* \`${CHAVE_PIX}\`\n`;
-            msg += `*━━━━━━━━━━━━━━━━━━━━*\n\n`;
-            msg += `_Por favor, envie o comprovante após realizar o pagamento._`;
-
-            historicoVendas.unshift({ 
-                data: new Date().toLocaleString('pt-BR'), 
-                cliente: nome, 
-                cidade: end,
-                total: total.replace('R$ ', ''),
-                resumoItens: resumoVenda 
-            });
-
+            historicoVendas.unshift({ data: new Date().toLocaleString(), cliente: nome, total: total.replace('R$ ', ''), resumoItens: resumoVenda });
             window.open(`https://wa.me/${FONE}?text=${encodeURIComponent(msg)}`);
         }
 
@@ -250,7 +206,8 @@
             const lista = document.getElementById('lista-edicao');
             lista.innerHTML = produtos.map((p, i) => `
                 <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border mb-1">
-                    <input type="text" value="${p.img}" onchange="produtos[${i}].img=this.value" placeholder="URL Foto" class="w-16 p-1 text-[9px] rounded border border-slate-200">
+                    <span class="text-[9px] font-black w-6">${p.id}</span>
+                    <input type="text" value="${p.img}" onchange="produtos[${i}].img=this.value" placeholder="URL Imagem" class="w-16 p-1 text-[9px] rounded border">
                     <input type="text" value="${p.desc}" onchange="produtos[${i}].desc=this.value" class="flex-1 p-1 text-[9px] font-bold uppercase border-none bg-transparent">
                     <input type="number" step="0.01" value="${p.preco}" onchange="produtos[${i}].preco=parseFloat(this.value)" class="w-16 p-1 text-right font-black text-blue-600 text-[10px]">
                 </div>
@@ -262,12 +219,10 @@
             let html = document.documentElement.outerHTML;
             html = html.replace(/let produtos = \[[\s\S]*?\];/, `let produtos = ${JSON.stringify(produtos)};`);
             html = html.replace(/let historicoVendas = \[[\s\S]*?\];/, `let historicoVendas = ${JSON.stringify(historicoVendas)};`);
-            const blob = new Blob([html], {type: 'text/html'});
             const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
+            a.href = URL.createObjectURL(new Blob([html], {type: 'text/html'}));
             a.download = 'radar_distribuidora.html';
             a.click();
-            alert("SISTEMA SALVO! Use este novo arquivo baixado agora.");
         }
 
         function filtrar() {
@@ -275,7 +230,7 @@
             renderizar(produtos.filter(p => p.desc.toLowerCase().includes(t)));
         }
 
-        function fazerLogin() { if(prompt("SENHA DE ACESSO:") === SENHA_MESTRA) abrirAdmin(); }
+        function fazerLogin() { if(prompt("Senha:") === SENHA_MESTRA) abrirAdmin(); }
         function fecharAdmin() { document.getElementById('modalAdmin').style.display='none'; renderizar(); }
 
         renderizar();
